@@ -1,6 +1,7 @@
 # OctoPrint-Powerplug
 
-**TODO:** Describe what your plugin does.
+A simple plugin for sending http requests to turn on a tasmota smart switch
+Uses the simple api to send commands to Octoprint and to the smart plug.
 
 ## Setup
 
@@ -9,9 +10,8 @@ or manually using this URL:
 
     https://github.com/Injourn/OctoPrint-Powerplug/archive/main.zip
 
-**TODO:** Describe how to install your plugin, if more needs to be done than just installing it via pip or through
-the plugin manager.
+**Requires** A smart plug that has been flashed with [Tasmota](https://tasmota.github.io/docs/)
 
 ## Configuration
 
-**TODO:** Describe your plugin's configuration options (if any).
+**URL**: the local ip address used to connect to the smart plug.

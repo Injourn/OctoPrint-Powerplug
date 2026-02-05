@@ -28,6 +28,9 @@ class PowerplugPlugin(
     def get_template_vars(self):
         return dict(url=self._settings.get(["url"]))
     
+    def get_settings_defaults(self):
+        return dict(url="http://127.0.0.1")
+    
     def get_template_configs(self):
         return [
             dict(type="navbar", custom_bindings=False),

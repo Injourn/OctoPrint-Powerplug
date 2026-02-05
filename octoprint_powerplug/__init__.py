@@ -1,5 +1,6 @@
 # coding=utf-8
 from __future__ import absolute_import
+import threading
 
 ### (Don't forget to remove me)
 # This is a basic skeleton for your plugin's __init__.py. You probably want to adjust the class name of your plugin
@@ -9,31 +10,82 @@ from __future__ import absolute_import
 #
 # Take a look at the documentation on what other plugin mixins are available.
 
+import flask
 import octoprint.plugin
+import requests
 
-class PowerplugPlugin(octoprint.plugin.SettingsPlugin,
-    octoprint.plugin.AssetPlugin,
-    octoprint.plugin.TemplatePlugin
+class PowerplugPlugin(
+    octoprint.plugin.StartupPlugin,
+    octoprint.plugin.SimpleApiPlugin,
+    octoprint.plugin.SettingsPlugin,
+    octoprint.plugin.TemplatePlugin,
+    octoprint.plugin.EventHandlerPlugin,
+    octoprint.plugin.AssetPlugin
 ):
+    power = False
+    timer = None
 
-    ##~~ SettingsPlugin mixin
-
-    def get_settings_defaults(self):
-        return {
-            # put your plugin's default settings here
-        }
-
-    ##~~ AssetPlugin mixin
-
+    def get_template_vars(self):
+        return dict(url=self._settings.get(["url"]))
+    
+    def get_template_configs(self):
+        return [
+            dict(type="navbar", custom_bindings=False),
+            dict(type="settings", custom_bindings=False)
+        ]
+    
     def get_assets(self):
-        # Define your plugin's asset files to automatically include in the
-        # core UI here.
-        return {
-            "js": ["js/powerplug.js"],
-            "css": ["css/powerplug.css"],
-            "less": ["less/powerplug.less"]
-        }
+        return dict(
+            js=["js/powerplug.js"]
+        )
+    def on_api_get(self, request):
+        action = request.args.get('action', default="toggle", type=str)
 
+        if action == "toggle":
+            self.toggle_plug()
+            return flask.jsonify(state=self.power)
+        elif action == "turnOn":
+            self.turn_on()
+            return flask.jsonify(state=self.power)
+        elif action == "turnOff":
+            self.turn_off()
+            return flask.jsonify(state=self.power)
+        elif action == "status":
+            self.get_power_state()
+            return flask.jsonify(state=self.power)
+
+    ## tasmota commands
+    def send_command_to_plug(self, command_name):
+        res = requests.get(self._settings.get(["url"]) + "/cm?cmnd=" + command_name)
+        return res.json()
+    
+    def toggle_plug(self):
+        res = self.send_command_to_plug("Power%20Toggle")
+        self.power = self.interpret_response(res)
+    
+    def turn_on(self):
+        res = self.send_command_to_plug("Power%20On")
+        self.power = self.interpret_response(res)
+    
+    def turn_off(self):
+        res = self.send_command_to_plug("Power%20Off")
+        self.power = self.interpret_response(res)
+    
+    def get_power_state(self):
+        res = self.send_command_to_plug("Power")
+        self.power = self.interpret_response(res)
+
+    def interpret_response(self, response):
+        powerResponse = False
+        if response["POWER"] == "ON":
+            powerResponse = True
+        self._plugin_manager.send_plugin_message(self._identifier, dict(isOn=powerResponse))
+        return powerResponse
+    
+    def on_after_startup(self):
+        self.get_power_state()
+
+    
     ##~~ Softwareupdate hook
 
     def get_update_information(self):

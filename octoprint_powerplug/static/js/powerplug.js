@@ -38,6 +38,7 @@ $(function() {
                     self.light_indicator.removeClass("fa-toggle-on").addClass("fa-toggle-off");
                 }
             });
+            OctoPrint.simpleApiGet("powerplug?action=status");
         }
         // TODO: Implement your plugin's view model here.
     }

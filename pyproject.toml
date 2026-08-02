@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "OctoPrint-Powerplug"
-version = "1.0.0"
+version = "1.1.0"
 description = "A simple plugin for sending http requests to turn on a tasmota smart switch"
 authors = [
     {name = "Injourn", email = "thatguywhowas@live.com"}
